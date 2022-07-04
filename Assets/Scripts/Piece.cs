@@ -10,30 +10,69 @@ public class Piece : MonoBehaviour
     public Vector3Int[] TheCells { get; private set; }
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
-        this.TheBoard = board;
-        this.Tetrodata = data;
-        this.ThePosition = position;
+        TheBoard = board;
+        Tetrodata = data;
+        ThePosition = position;
 
-        if (this.TheCells == null)
+        if (TheCells == null)
         {
-            this.TheCells = new Vector3Int[data.Cells.Length];
+            TheCells = new Vector3Int[data.Cells.Length];
         }
 
         for (int i = 0; i < data.Cells.Length; i++)
         {
-            this.TheCells[i] = (Vector3Int)data.Cells[i];
+            TheCells[i] = (Vector3Int)data.Cells[i];
         }
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
     }
 
     // Update is called once per frame
     void Update()
     {
+        TheBoard.Clear(this);
 
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            Move(Vector2Int.left);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            Move(Vector2Int.right);
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            Move(Vector2Int.down);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            HardDrop();
+        }
+
+        TheBoard.Set(this);
+    }
+
+    private void HardDrop()
+    {
+        while (Move(Vector2Int.down))
+        {
+            continue;
+        }
+    }
+
+    private bool Move(Vector2Int translation)
+    {
+        Vector3Int newPos = ThePosition;
+        newPos.x += translation.x;
+        newPos.y += translation.y;
+
+        bool valid = TheBoard.ValidPos(this, newPos);
+
+        if (valid)
+        {
+            ThePosition = newPos;
+        }
+
+        return valid;
     }
 }

@@ -5,19 +5,28 @@ using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
 {
-    public Tilemap tilemap { get; private set; }
+    public Tilemap Tilemap { get; private set; }
     public TetrominoData[] Tetrominoes;
-    public Piece actualPiece { get; private set; }
+    public Piece ActualPiece { get; private set; }
     public Vector3Int SpawnPos;
+    public Vector2Int BoardSize = new Vector2Int(10, 20);
+    public RectInt Bounds
+    {
+        get
+        {
+            Vector2Int pos = new Vector2Int(-BoardSize.x / 2, -BoardSize.y / 2);
+            return new RectInt(pos, BoardSize);
+        }
+    }
 
     private void Awake()
     {
-        this.tilemap = GetComponentInChildren<Tilemap>();
-        actualPiece = GetComponent<Piece>();
+        this.Tilemap = GetComponentInChildren<Tilemap>();
+        ActualPiece = GetComponent<Piece>();
 
-        for (int i = 0; i < this.Tetrominoes.Length; i++)
+        for (int i = 0; i < Tetrominoes.Length; i++)
         {
-            this.Tetrominoes[i].Initialize();
+            Tetrominoes[i].Initialize();
         }
     }
 
@@ -28,11 +37,11 @@ public class Board : MonoBehaviour
 
     public void SpawnPiece()
     {
-        int random = Random.Range(0, this.Tetrominoes.Length);
-        TetrominoData data = this.Tetrominoes[random];
+        int random = Random.Range(0, Tetrominoes.Length);
+        TetrominoData data = Tetrominoes[random];
 
-        this.actualPiece.Initialize(this, SpawnPos, data);
-        Set(actualPiece);
+        ActualPiece.Initialize(this, SpawnPos, data);
+        Set(ActualPiece);
     }
 
     public void Set(Piece piece)
@@ -40,7 +49,38 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.TheCells.Length; i++)
         {
             Vector3Int tilePos = piece.TheCells[i] + piece.ThePosition;
-            tilemap.SetTile(tilePos, piece.Tetrodata.tile);
+            Tilemap.SetTile(tilePos, piece.Tetrodata.tile);
         }
+    }
+
+    public void Clear(Piece piece)
+    {
+        for (int i = 0; i < piece.TheCells.Length; i++)
+        {
+            Vector3Int tilePos = piece.TheCells[i] + piece.ThePosition;
+            Tilemap.SetTile(tilePos, null);
+        }
+    }
+
+    public bool ValidPos(Piece piece, Vector3Int pos)
+    {
+        RectInt gridBounds = Bounds;
+
+        for (int i = 0; i < piece.TheCells.Length; i++)
+        {
+            Vector3Int tilePos = piece.TheCells[i] + pos;
+
+            if (!gridBounds.Contains((Vector2Int)tilePos))
+            {
+                return false;
+            }
+
+            if (Tilemap.HasTile(tilePos))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
