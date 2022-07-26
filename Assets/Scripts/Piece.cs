@@ -8,11 +8,13 @@ public class Piece : MonoBehaviour
     public TetrominoData Tetrodata { get; private set; }
     public Vector3Int ThePosition { get; private set; }
     public Vector3Int[] TheCells { get; private set; }
+    public int RotationIndex { get; private set; }
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
         TheBoard = board;
         Tetrodata = data;
         ThePosition = position;
+        RotationIndex = 0;
 
         if (TheCells == null)
         {
@@ -29,6 +31,15 @@ public class Piece : MonoBehaviour
     void Update()
     {
         TheBoard.Clear(this);
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            Rotate(-1);
+        }
+        else if (Input.GetKeyDown(KeyCode.E))
+        {
+            Rotate(1);
+        }
 
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
@@ -74,5 +85,46 @@ public class Piece : MonoBehaviour
         }
 
         return valid;
+    }
+
+    void Rotate(int dir)
+    {
+        RotationIndex += Wrap(RotationIndex + dir, 0, 4);
+
+        for (int i = 0; i < TheCells.Length; i++)
+        {
+            Vector3 cell = TheCells[i];
+
+            int x, y;
+
+            switch (Tetrodata.tetromino)
+            {
+                case Tetromino.I:
+                case Tetromino.O:
+                    cell.x -= 0.5f;
+                    cell.y -= 0.5f;
+                    x = Mathf.CeilToInt((cell.x * Data.RotationMatrix[0] * dir) + (cell.y * Data.RotationMatrix[1] * dir));
+                    y = Mathf.CeilToInt((cell.x * Data.RotationMatrix[2] * dir) + (cell.y * Data.RotationMatrix[3] * dir));
+                    break;
+                default:
+                    x = Mathf.RoundToInt((cell.x * Data.RotationMatrix[0] * dir) + (cell.y * Data.RotationMatrix[1] * dir));
+                    y = Mathf.RoundToInt((cell.x * Data.RotationMatrix[2] * dir) + (cell.y * Data.RotationMatrix[3] * dir));
+                    break;
+            }
+
+            TheCells[i] = new Vector3Int(x, y, 0);
+        }
+    }
+
+    int Wrap(int input, int min, int max)
+    {
+        if (input < min)
+        {
+            return max - (min - input) % (max - min);
+        }
+        else
+        {
+            return min + (input - min) % (max - min);
+        }
     }
 }
