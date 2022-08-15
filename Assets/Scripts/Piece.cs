@@ -89,8 +89,20 @@ public class Piece : MonoBehaviour
 
     void Rotate(int dir)
     {
+        int orginalRotation = RotationIndex;
         RotationIndex += Wrap(RotationIndex + dir, 0, 4);
 
+        ApplyRotation(dir);
+
+        if (!TestWallKicks(RotationIndex, dir))
+        {
+            RotationIndex = orginalRotation;
+            ApplyRotation(-dir);
+        }
+    }
+
+    void ApplyRotation (int dir)
+    {
         for (int i = 0; i < TheCells.Length; i++)
         {
             Vector3 cell = TheCells[i];
@@ -114,6 +126,35 @@ public class Piece : MonoBehaviour
 
             TheCells[i] = new Vector3Int(x, y, 0);
         }
+    }
+
+    bool TestWallKicks(int rotationIndex, int rotationDirection)
+    {
+        int wallKickId = GetWallKickId(rotationIndex, rotationDirection);
+
+        for (int i = 0; i < Tetrodata.WallKicks.GetLength(1); i++)
+        {
+            Vector2Int trans = Tetrodata.WallKicks[wallKickId, i];
+
+            if (Move(trans))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int GetWallKickId(int rotationIndex, int rotationDirection)
+    {
+        int wallKickId = rotationIndex * 2;
+
+        if (rotationDirection < 0)
+        {
+            wallKickId--;
+        }
+
+        return Wrap(wallKickId, 0, Tetrodata.WallKicks.GetLength(0));
     }
 
     int Wrap(int input, int min, int max)
