@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,12 +10,20 @@ public class Piece : MonoBehaviour
     public Vector3Int ThePosition { get; private set; }
     public Vector3Int[] TheCells { get; private set; }
     public int RotationIndex { get; private set; }
+
+    public float StepDelay = 1f;
+    public float LockDelay = 0.5f;
+    float stepTime;
+    float lockTime;
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
         TheBoard = board;
         Tetrodata = data;
         ThePosition = position;
         RotationIndex = 0;
+
+        stepTime = Time.time + StepDelay;
+        lockTime = 0f;
 
         if (TheCells == null)
         {
@@ -31,6 +40,8 @@ public class Piece : MonoBehaviour
     void Update()
     {
         TheBoard.Clear(this);
+
+        lockTime += Time.deltaTime;
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -60,7 +71,30 @@ public class Piece : MonoBehaviour
             HardDrop();
         }
 
+        if(Time.time > stepTime)
+        {
+            Step();
+        }
+
         TheBoard.Set(this);
+    }
+
+    private void Step()
+    {
+        stepTime = Time.time + StepDelay;
+
+        Move(Vector2Int.down);
+
+        if(lockTime >= LockDelay)
+        {
+            Lock() ;
+        }
+    }
+
+    private void Lock()
+    {
+        TheBoard.Set(this);
+        TheBoard.SpawnPiece();
     }
 
     private void HardDrop()
@@ -69,6 +103,7 @@ public class Piece : MonoBehaviour
         {
             continue;
         }
+        Lock();
     }
 
     private bool Move(Vector2Int translation)
@@ -82,6 +117,7 @@ public class Piece : MonoBehaviour
         if (valid)
         {
             ThePosition = newPos;
+            lockTime = 0f;
         }
 
         return valid;
